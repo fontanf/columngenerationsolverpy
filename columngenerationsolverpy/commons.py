@@ -1,5 +1,6 @@
 import math
-import time
+
+TOL = 1e-6
 
 
 class Column:
@@ -37,56 +38,7 @@ class Parameters:
         self.column_upper_bound = None
         self.dummy_column_objective_coefficient = None
         self.pricing_solver = None
-        self.columns = None
-
-
-def display_initialize(parameters, verbose):
-    if verbose:
-        print("-"*79)
-        print('{:10}'.format("Time"), end='')
-        if parameters.objective_sense == "min":
-            print('{:14}'.format("UB"), end='')
-            print('{:14}'.format("LB"), end='')
-        else:
-            print('{:14}'.format("LB"), end='')
-            print('{:14}'.format("UB"), end='')
-        print('{:14}'.format("Gap"), end='')
-        print('{:14}'.format("Gap (%)"), end='')
-        print('{:32}'.format("Comment"), end='')
-        print()
-        print("-"*79)
-
-
-def display(primal, dual, message, start, verbose):
-    if verbose:
-        absolute_gap = abs(primal - dual)
-        relative_gap = 100.0 * absolute_gap / max(abs(primal), abs(dual))
-        print(
-                '{:<10.3f}'.format(time.time() - start)
-                + '{:14}'.format(primal)
-                + '{:14}'.format(dual)
-                + '{:14}'.format(absolute_gap)
-                + '{:14}'.format(relative_gap)
-                + '{:32}'.format(message))
-
-
-def display_end(output, start, verbose):
-    if verbose:
-        total_time = time.time() - start
-        primal = output["solution_value"]
-        dual = output["bound"]
-        absolute_gap = abs(primal - dual)
-        relative_gap = 100.0 * absolute_gap / max(abs(primal), abs(dual))
-        total_number_of_columns = output["total_number_of_columns"]
-        number_of_columns_added = output["number_of_columns_added"]
-        print("---")
-        print(f"Solution value: {primal}")
-        print(f"Bound: {dual}")
-        print(f"Absolute gap: {absolute_gap}")
-        print(f"Relative gap (%): {relative_gap}")
-        print(f"Total number of columns: {total_number_of_columns}")
-        print(f"Number of columns added: {number_of_columns_added}")
-        print(f"Total time: {total_time}")
+        self.columns = []
 
 
 def is_feasible(parameters, solution):
@@ -109,12 +61,19 @@ def is_feasible(parameters, solution):
         for index, coef in zip(column.row_indices, column.row_coefficients):
             row_values[index] += value * coef
 
+    # print("is_feasible")
+    # print(solution)
+    # for val, lb, ub in zip(row_values,
+    #                        parameters.row_lower_bounds,
+    #                        parameters.row_upper_bounds):
+    #     print(lb, val, ub)
+
     for val, lb, ub in zip(row_values,
                            parameters.row_lower_bounds,
                            parameters.row_upper_bounds):
-        if val < lb:
+        if val < lb - TOL:
             return False
-        if val > ub:
+        if val > ub + TOL:
             return False
     return True
 

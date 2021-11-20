@@ -1,12 +1,12 @@
 import time
 import pulp
 
-import columngenerationsolverpy.commons as cg
+from .commons import compute_reduced_cost, TOL
 
 
 def column_generation(parameters, **optional_parameters):
-    # Read parameters.
     start = time.time()
+    # Read parameters.
     linear_programming_solver = optional_parameters.get(
             "linear_programming_solver", "CLP")
     maximum_number_of_iterations = optional_parameters.get(
@@ -17,10 +17,21 @@ def column_generation(parameters, **optional_parameters):
             "verbose", True)
     fixed_columns = optional_parameters.get(
             "fixed_columns", [])
-    columns = optional_parameters.get(
-            "columns", [])
 
-    TOL = 1e-6
+    if verbose:
+        print("======================================")
+        print("       Column Generation Solver       ")
+        print("======================================")
+        print()
+        print("Algorithm")
+        print("---------")
+        print("Column Generation")
+        print()
+        print("Parameters")
+        print("----------")
+        print(f"Linear programming solver:     {linear_programming_solver}")
+        print(f"Maximum number of iterations:  {maximum_number_of_iterations}")
+        print(f"Time limit:                    {time_limit}")
 
     # Initialize output structure.
     output = {
@@ -30,23 +41,21 @@ def column_generation(parameters, **optional_parameters):
             "total_number_of_columns": 0,
             "number_of_columns_added": 0,
             "time_lp_solve": 0.0,
-            "time_pricing": 0.0,
-            "columns": columns}
+            "time_pricing": 0.0}
 
     # Initial print.
     if verbose:
-        print("*** columngeneration ***")
-        print("---")
-        print(f"Linear programming solver: {linear_programming_solver}")
-        print(f"Maximum number of iterations: {maximum_number_of_iterations}")
-
-        print("-" * 40)
-        print('{:>10}'.format("Time"), end='')
-        print('{:>8}'.format("It"), end='')
-        print('{:>14}'.format("Obj"), end='')
-        print('{:>8}'.format("Col"), end='')
         print()
-        print("-" * 40)
+        print(
+                '{:>10}'.format("Time")
+                + '{:>8}'.format("It")
+                + '{:>14}'.format("Obj")
+                + '{:>8}'.format("Col"))
+        print(
+                '{:>10}'.format("----")
+                + '{:>8}'.format("--")
+                + '{:>14}'.format("---")
+                + '{:>8}'.format("---"))
 
     m = len(parameters.row_lower_bounds)
 
@@ -54,7 +63,7 @@ def column_generation(parameters, **optional_parameters):
     row_values = [0.0] * m
     c0 = 0.0
     for column_id, value in fixed_columns:
-        column = columns[column_id]
+        column = parameters.columns[column_id]
         for index, coef in zip(column.row_indices, column.row_coefficients):
             row_values[index] += value * coef
         c0 += column.objective_coefficient
@@ -143,18 +152,18 @@ def column_generation(parameters, **optional_parameters):
 
     # Initialize pricing solver.
     infeasible_columns = parameters.pricing_solver.initialize_pricing(
-            columns, fixed_columns)
-    feasible = [True] * len(columns)
+            parameters.columns, fixed_columns)
+    feasible = [True] * len(parameters.columns)
     if infeasible_columns is not None:
         for column_id in infeasible_columns:
             feasible[column_id] = False
 
     # Add initial columns.
-    for column_id, column in enumerate(columns):
+    for column_id, column in enumerate(parameters.columns):
         if not feasible[column_id]:
             continue
-        ri = [None] * new_number_of_rows
-        rc = [None] * new_number_of_rows
+        ri = []
+        rc = []
         ok = True
         for i, c in zip(column.row_indices, column.row_coefficients):
             # The column might not be feasible.
@@ -225,7 +234,7 @@ def column_generation(parameters, **optional_parameters):
         # Look for negative reduced cost columns.
         new_columns = []
         for column in all_columns:
-            rc = cg.compute_reduced_cost(column, duals)
+            rc = compute_reduced_cost(column, duals)
             if parameters.objective_sense == "min" and rc <= 0 - TOL:
                 new_columns.append(column)
             if parameters.objective_sense == "max" and rc >= 0 + TOL:
@@ -238,7 +247,7 @@ def column_generation(parameters, **optional_parameters):
 
         for column in new_columns:
             # Add new column to the global column pool.
-            columns.append(column)
+            parameters.columns.append(column)
             output["number_of_columns_added"] += 1
             # Add new column to the local LP solver.
             ri = []
@@ -248,7 +257,7 @@ def column_generation(parameters, **optional_parameters):
                     continue
                 ri.append(new_row_indices[i])
                 rc.append(c)
-            column_id = len(columns) - 1
+            column_id = len(parameters.columns) - 1
             solver_column_indices.append(column_id)
             pulp.LpVariable(
                     "v" + str(column_id),
@@ -270,12 +279,13 @@ def column_generation(parameters, **optional_parameters):
 
     # Compute solution.
     output["solution"] = []
-    for col_pos, col_id in enumerate(solver_column_indices):
-        if col_id == -1:
+    for var in master_problem.variables():
+        if var.name[1] == 'd':
             continue
-        v = master_problem.variables()[col_pos].varValue
-        if v != 0:
-            output["solution"].append((col_id, v))
+        column_id = int(var.name[1:])
+        column_value = var.varValue
+        if column_value != 0:
+            output["solution"].append((column_id, column_value))
 
     if verbose:
         total_time = time.time() - start
@@ -285,13 +295,15 @@ def column_generation(parameters, **optional_parameters):
         number_of_iterations = output["number_of_iterations"]
         time_lp_solve = output["time_lp_solve"]
         time_pricing = output["time_pricing"]
-        print("---")
-        print(f"Solution value: {primal}")
-        print(f"Total number of columns: {total_number_of_columns}")
-        print(f"Number of columns added: {number_of_columns_added}")
-        print(f"Number of iterations: {number_of_iterations}")
-        print(f"Time LP solve: {time_lp_solve}")
-        print(f"Time pricing: {time_pricing}")
-        print(f"Total time: {total_time}")
+        print()
+        print("Final statistics")
+        print("----------------")
+        print("Time:" + " " * 24 + '{:<11.3f}'.format(total_time))
+        print(f"Solution value:              {primal}")
+        print(f"Total number of columns:     {total_number_of_columns}")
+        print(f"Number of columns added:     {number_of_columns_added}")
+        print(f"Number of iterations:        {number_of_iterations}")
+        print("Time LP solve:" + " " * 15 + '{:<11.3f}'.format(time_lp_solve))
+        print("Time pricing:" + " " * 16 + '{:<11.3f}'.format(time_pricing))
 
     return output

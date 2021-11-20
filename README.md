@@ -14,6 +14,8 @@ The goal of this repository is to provide a simple framework to quickly implemen
 
 Algorithms:
 * Column Generation `column_generation`
+* Greedy `greedy`
+* Limited Discrepancy Search `limited_discrepancy_search`
 
 ## Examples
 
@@ -30,7 +32,8 @@ Running an example:
 ```shell
 mkdir -p data/cuttingstock/instance
 python3 -m examples.cuttingstock -a generator -i data/cuttingstock/instance
-python3 -m examples.cuttingstock -a column_generation -i data/cuttingstock/instance_50.json
+python3 -m examples.cuttingstock -a column_generation -i data/cuttingstock/instance_10.json
+python3 -m examples.cuttingstock -a limited_discrepancy_search -i data/cuttingstock/instance_10.json
 ```
 
 Update:

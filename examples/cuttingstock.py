@@ -63,9 +63,16 @@ class Instance:
     def write(self, filepath):
         data = {"capacity": self.capacity,
                 "item_type_weights": [item.weight for item in self.item_types],
-                "item_type_demands": [item.weight for item in self.item_types]}
+                "item_type_demands": [item.demand for item in self.item_types]}
         with open(filepath, 'w') as json_file:
             json.dump(data, json_file)
+
+        # with open(filepath + "_", 'w') as f:
+        #     f.write(str(len(self.item_types))
+        #             + " " + str(self.capacity) + "\n")
+        #     for item_type in self.item_types:
+        #         f.write(str(item_type.weight)
+        #                 + " " + str(item_type.demand) + "\n")
 
     def check(self, filepath):
         with open(filepath) as json_file:
@@ -76,7 +83,7 @@ class Instance:
             # Compute number_of_overweighted_bins.
             number_of_overweighted_bins = 0
             for items in data["item_types"]:
-                weight = sum(self.item_types[item_type_id]
+                weight = sum(self.item_types[item_type_id].weight
                              for item_type_id in items)
                 if weight > self.capacity:
                     number_of_overweighted_bins += 1
@@ -90,6 +97,7 @@ class Instance:
             for item_type_id, item_type in enumerate(self.item_types):
                 if demands[item_type_id] != item_type.demand:
                     number_of_unsatisfied_demands += 1
+
             is_feasible = (
                     (number_of_items == len(self.weights))
                     and (number_of_unsatisfied_demands == 0)
@@ -113,10 +121,12 @@ class PricingSolver:
 
     def initialize_pricing(self, columns, fixed_columns):
         self.filled_demands = [0] * len(instance.item_types)
-        for column, value in fixed_columns:
-            x = zip(column.row_indices, column.row_coefficients)
-            for row_index, row_coefficient in x:
-                self.filled_demands[row_index] += value * row_coefficient
+        for column_id, column_value in fixed_columns:
+            column = columns[column_id]
+            for row_index, row_coefficient in zip(column.row_indices,
+                                                  column.row_coefficients):
+                self.filled_demands[row_index] += (
+                        column_value * row_coefficient)
 
     def solve_pricing(self, duals):
         # Build subproblem instance.
@@ -124,15 +134,18 @@ class PricingSolver:
         weights = []
         profits = []
         kp2csp = []
+        # print("init_pricing")
         for item_type_id, item_type in enumerate(self.instance.item_types):
             profit = duals[item_type_id]
             if profit <= 0:
                 continue
+            # print(item_type_id, self.filled_demands[item_type_id])
             for _ in range(self.filled_demands[item_type_id],
                            self.instance.item_types[item_type_id].demand):
                 profits.append(profit)
                 weights.append(self.instance.item_types[item_type_id].weight)
                 kp2csp.append(item_type_id)
+        # print(weights)
 
         # Solve subproblem instance.
         n = len(weights)
@@ -215,7 +228,11 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    if args.algorithm == "generator":
+    if args.algorithm == "checker":
+        instance = Instance(args.instance)
+        instance.check(args.certificate)
+
+    elif args.algorithm == "generator":
         import random
         random.seed(0)
         for number_of_item_types in range(1, 101):
@@ -233,29 +250,19 @@ if __name__ == "__main__":
         output = columngenerationsolverpy.column_generation(
                 get_parameters(instance))
 
-    elif args.algorithm == "greedy":
+    else:
         instance = Instance(args.instance)
         parameters = get_parameters(instance)
-        output = columngenerationsolverpy.greedy(parameters)
-        solution = to_solutionn(output.columns, output.solution)
+        if args.algorithm == "greedy":
+            output = columngenerationsolverpy.greedy(
+                    parameters)
+        elif args.algorithm == "limited_discrepancy_search":
+            output = columngenerationsolverpy.limited_discrepancy_search(
+                    parameters,
+                    maximum_discrepancy=1)
+        solution = to_solution(parameters.columns, output["solution"])
         if args.certificate is not None:
             data = {"locations": solution}
             with open(args.certificate, 'w') as json_file:
                 json.dump(data, json_file)
             instance.check(args.certificate)
-
-    elif args.algorithm == "limited_discrepancy_search":
-        instance = Instance(args.instance)
-        parameters = get_parameters(instance)
-        output = columngenerationsolverpy.limited_discrepancy_search(
-                parameters)
-        solution = to_solutionn(output.columns, output.solution)
-        if args.certificate is not None:
-            data = {"locations": solution}
-            with open(args.certificate, 'w') as json_file:
-                json.dump(data, json_file)
-            instance.check(args.certificate)
-
-    elif args.algorithm == "checker":
-        instance = Instance(args.instance)
-        instance.check(args.certificate)
