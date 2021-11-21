@@ -75,35 +75,34 @@ class Instance:
         #                 + " " + str(item_type.demand) + "\n")
 
     def check(self, filepath):
+        print("Checker")
+        print("-------")
         with open(filepath) as json_file:
             data = json.load(json_file)
-            # Compute number_of_items.
-            number_of_items = sum(len(items)
-                                  for items in data["item_types"])
+            # Compute number_of_bins.
+            number_of_bins = sum(copies for copies, items in data["items"])
             # Compute number_of_overweighted_bins.
             number_of_overweighted_bins = 0
-            for items in data["item_types"]:
+            for copies, items in data["items"]:
                 weight = sum(self.item_types[item_type_id].weight
                              for item_type_id in items)
                 if weight > self.capacity:
-                    number_of_overweighted_bins += 1
+                    number_of_overweighted_bins += copies
             # Compute number_of_unsatisfied_demands.
             demands = {item_type_id: 0
                        for item_type_id in range(len(self.item_types))}
-            for items in data["item_types"]:
+            for copies, items in data["items"]:
                 for item_type_id in items:
-                    demands[item_type_id] += 1
+                    demands[item_type_id] += copies
             number_of_unsatisfied_demands = 0
             for item_type_id, item_type in enumerate(self.item_types):
                 if demands[item_type_id] != item_type.demand:
                     number_of_unsatisfied_demands += 1
 
             is_feasible = (
-                    (number_of_items == len(self.weights))
-                    and (number_of_unsatisfied_demands == 0)
+                    (number_of_unsatisfied_demands == 0)
                     and (number_of_overweighted_bins == 0))
-            objective_value = len(data["item_types"])
-            print(f"Number of item_types: {number_of_items}")
+            objective_value = number_of_bins
             print(f"Number of overweighted bins: "
                   f"{number_of_overweighted_bins}")
             print(f"Number of unsatisfied demands: "
@@ -134,18 +133,15 @@ class PricingSolver:
         weights = []
         profits = []
         kp2csp = []
-        # print("init_pricing")
         for item_type_id, item_type in enumerate(self.instance.item_types):
             profit = duals[item_type_id]
             if profit <= 0:
                 continue
-            # print(item_type_id, self.filled_demands[item_type_id])
             for _ in range(self.filled_demands[item_type_id],
                            self.instance.item_types[item_type_id].demand):
                 profits.append(profit)
                 weights.append(self.instance.item_types[item_type_id].weight)
                 kp2csp.append(item_type_id)
-        # print(weights)
 
         # Solve subproblem instance.
         n = len(weights)
@@ -262,7 +258,8 @@ if __name__ == "__main__":
                     maximum_discrepancy=1)
         solution = to_solution(parameters.columns, output["solution"])
         if args.certificate is not None:
-            data = {"locations": solution}
+            data = {"items": solution}
             with open(args.certificate, 'w') as json_file:
                 json.dump(data, json_file)
+            print()
             instance.check(args.certificate)

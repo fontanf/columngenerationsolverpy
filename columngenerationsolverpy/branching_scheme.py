@@ -143,7 +143,7 @@ class BranchingScheme:
                     continue
                 bp = self.parameters.columns[column_id].branching_priority
                 c = math.ceil(column_value)
-                if c != 0:
+                if abs(c) > TOL:
                     if (column_id_best is None
                             or branching_priority_best < bp
                             or (branching_priority_best == bp
@@ -153,7 +153,7 @@ class BranchingScheme:
                         diff_best = c - column_value
                         branching_priority_best = bp
                 f = math.floor(column_value)
-                if f != 0:
+                if abs(f) > TOL:
                     if (
                             column_id_best is None
                             or branching_priority_best < bp

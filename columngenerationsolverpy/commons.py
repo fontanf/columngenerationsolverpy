@@ -1,6 +1,6 @@
 import math
 
-TOL = 1e-6
+TOL = 1e-4
 
 
 class Column:

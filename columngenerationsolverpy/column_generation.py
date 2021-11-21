@@ -201,12 +201,14 @@ def column_generation(parameters, **optional_parameters):
         # Solve LP
         start_lpsolve = time.time()
         master_problem.solve(pulp.PULP_CBC_CMD(msg=0))
+        obj = c0
+        if pulp.value(master_problem.objective):
+            obj += pulp.value(master_problem.objective)
         end_lpsolve = time.time()
         output["time_lp_solve"] += end_lpsolve - start_lpsolve
 
         # Display.
         if verbose:
-            obj = c0 + pulp.value(master_problem.objective)
             print('{:>10.3f}'.format(time.time() - start), end='')
             print('{:>8}'.format(output["number_of_iterations"]), end='')
             print('{:>14f}'.format(obj), end='')
@@ -235,6 +237,7 @@ def column_generation(parameters, **optional_parameters):
         new_columns = []
         for column in all_columns:
             rc = compute_reduced_cost(column, duals)
+            # print("rc", rc)
             if parameters.objective_sense == "min" and rc <= 0 - TOL:
                 new_columns.append(column)
             if parameters.objective_sense == "max" and rc >= 0 + TOL:
@@ -275,16 +278,16 @@ def column_generation(parameters, **optional_parameters):
         output["number_of_iterations"] += 1
 
     # Compute solution value.
-    output["solution_value"] = c0 + pulp.value(master_problem.objective)
+    output["solution_value"] = obj
 
     # Compute solution.
     output["solution"] = []
     for var in master_problem.variables():
-        if var.name[1] == 'd':
+        if var.name[1] == 'd' or var.name == "__dummy":
             continue
         column_id = int(var.name[1:])
         column_value = var.varValue
-        if column_value != 0:
+        if abs(column_value) > TOL:
             output["solution"].append((column_id, column_value))
 
     if verbose:
