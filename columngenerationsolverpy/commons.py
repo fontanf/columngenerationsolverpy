@@ -4,7 +4,29 @@ TOL = 1e-4
 
 
 class Column:
-    """Structure that represents a column."""
+    """Structure that represents a column.
+
+    The values are stored sparsely, i.e. only non-zeros are stored.
+
+    Attributes
+    ----------
+
+    objective_coefficient : float
+        Coefficient of the column in the objective function.
+    row_indices : list of int
+        Indices of the rows with a non-zero coefficient.
+    row_coefficients : list of float
+        Values of the non-zeros of the column.
+    branching_priority : int
+        Branching priority of the column. A column with a smaller priority will
+        always be branched first.
+    extra : any
+        Extra attribute which can be used to store additional information about
+        the column which are not contained in the row values. For example, if
+        the column represents a route, the order in which the locations are
+        visited can be stored in this attribute.
+
+    """
 
     def __init__(self):
         self.row_indices = []
@@ -26,6 +48,34 @@ class Parameters:
 
     Contains the structures that describe the master problem and the oracle for
     the pricing problem.
+
+    Attributes
+    ----------
+
+    objective_sense : "min" or "max"
+        Sense of the objective function.
+    column_lower_bound : float
+        Lower bound of the columns.
+    column_upper_bound : float
+        Upper bound of the columns.
+    dummy_column_objective_coefficient : float
+        Coefficient of the dummy columns in the objective function. It should
+        be as small as possible to avoid numerical issues, but still ensure
+        that no dummy column can be taken in an optimal solution.
+    row_lower_bounds : list of float
+        Lower bounds of the rows.
+    row_upper_bounds : list of float
+        Upper bounds of the rows.
+    row_coefficient_lower_bounds : list of float
+        Lower bounds of the coefficients of the variables for each row.
+    row_coefficient_upper_bounds : list of float
+        Upper bounds of the coefficients of the variables for each row.
+    pricing_solver : PricingSolver
+        Object solving the pricing problem.
+    columns : list of Column
+        Structure storing the columns. It can be used to provide initial
+        columns. The newly generated columns will be added to this structure.
+
     """
 
     def __init__(self, number_of_rows):
@@ -47,6 +97,7 @@ def is_feasible(parameters, solution):
 
     Parameters
     ----------
+
     parameters : Parameters
         'Parameter' structure of the problem.
     solution : list of (int, float)
@@ -84,6 +135,7 @@ def compute_value(parameters, solution):
 
     Parameters
     ----------
+
     parameters : Parameters
         'Parameter' structure of the problem.
     solution : list of (int, float)

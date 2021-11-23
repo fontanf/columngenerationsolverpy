@@ -1,7 +1,13 @@
 """Cutting Stock Problem.
 
-Problem description:
-See https://github.com/fontanf/orproblems/blob/main/orproblems/cuttingstock.hpp
+Input:
+- a capacity c
+- n items; for each item j = 1..n, a weight wⱼ and a demand qⱼ
+Problem:
+- pack all items such that the total weight of the items in a bin does not
+  exceed the capacity.
+Objective:
+- minimize the number of bin used.
 
 The linear programming formulation of the problem based on DantzigWolfe
 decomposition is written as follows:
