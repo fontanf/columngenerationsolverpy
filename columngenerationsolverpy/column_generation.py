@@ -38,7 +38,6 @@ def column_generation(parameters, **optional_parameters):
             "solution": None,
             "solution_value": None,
             "number_of_iterations": 0,
-            "total_number_of_columns": 0,
             "number_of_columns_added": 0,
             "time_lp_solve": 0.0,
             "time_pricing": 0.0}
@@ -128,6 +127,14 @@ def column_generation(parameters, **optional_parameters):
 
     # Add dummy columns.
     number_of_dummy_columns = 0
+    solver_column_indices.append(-1)
+    number_of_dummy_columns += 1
+    pulp.LpVariable(
+            "vd-1",
+            parameters.column_lower_bound,
+            parameters.column_upper_bound,
+            pulp.LpContinuous,
+            parameters.dummy_column_objective_coefficient * objective)
     for row in range(new_number_of_rows):
         if new_row_lower_bounds[row] > 0:
             solver_column_indices.append(-1)
@@ -293,7 +300,7 @@ def column_generation(parameters, **optional_parameters):
     if verbose:
         total_time = time.time() - start
         primal = output["solution_value"]
-        total_number_of_columns = output["total_number_of_columns"]
+        total_number_of_columns = len(parameters.columns)
         number_of_columns_added = output["number_of_columns_added"]
         number_of_iterations = output["number_of_iterations"]
         time_lp_solve = output["time_lp_solve"]
