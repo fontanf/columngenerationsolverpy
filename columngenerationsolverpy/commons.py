@@ -38,8 +38,8 @@ class Column:
 
     def __str__(self):
         s = f"objective coefficient: {self.objective_coefficient}\n"
-        s += "row indices: " + " ".join(self.row_indices) + "\n"
-        s += "row coefficients: " + " ".join(self.row_coefficients) + "\n"
+        s += "row indices: " + str(self.row_indices) + "\n"
+        s += "row coefficients: " + str(self.row_coefficients)
         return s
 
 

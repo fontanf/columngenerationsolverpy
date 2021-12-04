@@ -17,6 +17,8 @@ def column_generation(parameters, **optional_parameters):
             "verbose", True)
     fixed_columns = optional_parameters.get(
             "fixed_columns", [])
+    debug = optional_parameters.get(
+            "debug", False)
 
     if verbose:
         print("======================================")
@@ -207,12 +209,23 @@ def column_generation(parameters, **optional_parameters):
     while True:
         # Solve LP
         start_lpsolve = time.time()
-        master_problem.solve(pulp.PULP_CBC_CMD(msg=0))
+        if debug:
+            print("Master problem:")
+            print(master_problem)
+            print()
+            print("Solve master problem:")
+            master_problem.solve()
+            print()
+        else:
+            master_problem.solve(pulp.PULP_CBC_CMD(msg=0))
+        end_lpsolve = time.time()
+        output["time_lp_solve"] += end_lpsolve - start_lpsolve
         obj = c0
         if pulp.value(master_problem.objective):
             obj += pulp.value(master_problem.objective)
-        end_lpsolve = time.time()
-        output["time_lp_solve"] += end_lpsolve - start_lpsolve
+        if debug:
+            print("Objective:", obj)
+            print()
 
         # Display.
         if verbose:
@@ -244,7 +257,11 @@ def column_generation(parameters, **optional_parameters):
         new_columns = []
         for column in all_columns:
             rc = compute_reduced_cost(column, duals)
-            # print("rc", rc)
+            if debug:
+                print("Column:")
+                print(column)
+                print("Reduced cost:", rc)
+                print()
             if parameters.objective_sense == "min" and rc <= 0 - TOL:
                 new_columns.append(column)
             if parameters.objective_sense == "max" and rc >= 0 + TOL:
