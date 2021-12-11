@@ -392,6 +392,7 @@ def limited_discrepancy_search(parameters, **kwargs):
     treesearchsolverpy.best_first_search(
             branching_scheme,
             new_solution_callback=new_solution_callback,
+            time_limit=time_limit,
             verbose=False)
 
     elapsed_time = time.time() - branching_scheme.start
