@@ -34,7 +34,7 @@ class BranchingScheme:
             if self.discrepancy != other.discrepancy:
                 return self.discrepancy < other.discrepancy
             if self.value_sum != other.value_sum:
-                return self.value_sum < other.value_sum
+                return self.value_sum > other.value_sum
             return self.id < other.id
 
     def __init__(self, parameters, **kwargs):
