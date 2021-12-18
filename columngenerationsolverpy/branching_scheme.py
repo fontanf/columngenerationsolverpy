@@ -51,7 +51,6 @@ class BranchingScheme:
                 "time_lp_solve": 0.0,
                 "time_pricing": 0.0,
                 "number_of_columns_added": 0,
-                "total_number_of_columns": 0,
                 "solution": None,
                 }
 
@@ -297,15 +296,24 @@ def greedy(parameters, **kwargs):
 
     # Final display.
     if verbose:
+        primal = branching_scheme.output["solution_value"]
+        dual = branching_scheme.output["bound"]
+        if parameters.objective_sense == "min":
+            absolute_gap = primal - dual
+        else:
+            absolute_gap = dual - primal
+        relative_gap = 100.0 * absolute_gap / max(abs(primal), abs(dual))
+        total_number_of_columns = len(parameters.columns)
         o = branching_scheme.output
         print()
         print("Final statistics")
         print("----------------")
+        print(f"Solution value:              {primal}")
+        print(f"Bound:                       {dual}")
+        print(f"Absolute gap:                {absolute_gap}")
+        print(f"Relative gap:                {round(relative_gap, 2)}")
+        print(f"Total number of columns:     {total_number_of_columns}")
         print("Time:" + " " * 24 + '{:<11.3f}'.format(elapsed_time))
-        print(f"Solution value:              {o['solution_value']}")
-        print(f"Bound:                       {o['bound']}")
-        print(f"Total number of columns:     {o['total_number_of_columns']}")
-        print(f"Number of columns added:     {o['number_of_columns_added']}")
         print("Time LP solve:" + " " * 15
               + '{:<11.3f}'.format(o['time_lp_solve']))
         print("Time pricing:" + " " * 16
@@ -376,7 +384,10 @@ def limited_discrepancy_search(parameters, **kwargs):
         if verbose:
             primal = branching_scheme.output["solution_value"]
             dual = branching_scheme.output["bound"]
-            absolute_gap = abs(primal - dual)
+            if parameters.objective_sense == "min":
+                absolute_gap = primal - dual
+            else:
+                absolute_gap = dual - primal
             relative_gap = 100.0 * absolute_gap / max(abs(primal), abs(dual))
             message = (
                     f"node {output['number_of_nodes']}"
@@ -400,15 +411,24 @@ def limited_discrepancy_search(parameters, **kwargs):
 
     # Final display.
     if verbose:
+        primal = branching_scheme.output["solution_value"]
+        dual = branching_scheme.output["bound"]
+        if parameters.objective_sense == "min":
+            absolute_gap = primal - dual
+        else:
+            absolute_gap = dual - primal
+        relative_gap = 100.0 * absolute_gap / max(abs(primal), abs(dual))
+        total_number_of_columns = len(parameters.columns)
         o = branching_scheme.output
         print()
         print("Final statistics")
         print("----------------")
+        print(f"Solution value:              {primal}")
+        print(f"Bound:                       {dual}")
+        print(f"Absolute gap:                {absolute_gap}")
+        print(f"Relative gap:                {round(relative_gap, 2)}")
+        print(f"Number of columns:           {total_number_of_columns}")
         print("Time:" + " " * 24 + '{:<11.3f}'.format(elapsed_time))
-        print(f"Solution value:              {o['solution_value']}")
-        print(f"Bound:                       {o['bound']}")
-        print(f"Total number of columns:     {o['total_number_of_columns']}")
-        print(f"Number of columns added:     {o['number_of_columns_added']}")
         print("Time LP solve:" + " " * 15
               + '{:<11.3f}'.format(o['time_lp_solve']))
         print("Time pricing:" + " " * 16
