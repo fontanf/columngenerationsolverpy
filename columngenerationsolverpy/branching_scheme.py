@@ -302,7 +302,13 @@ def greedy(parameters, **kwargs):
             absolute_gap = primal - dual
         else:
             absolute_gap = dual - primal
-        relative_gap = 100.0 * absolute_gap / max(abs(primal), abs(dual))
+        denom = max(abs(primal), abs(dual))
+        if absolute_gap == 0:
+            relative_gap = 0
+        elif denom != 0:
+            relative_gap = 100.0 * absolute_gap / denom
+        else:
+            relative_gap = float('inf')
         total_number_of_columns = len(parameters.columns)
         o = branching_scheme.output
         print()
@@ -388,7 +394,13 @@ def limited_discrepancy_search(parameters, **kwargs):
                 absolute_gap = primal - dual
             else:
                 absolute_gap = dual - primal
-            relative_gap = 100.0 * absolute_gap / max(abs(primal), abs(dual))
+            denom = max(abs(primal), abs(dual))
+            if absolute_gap == 0:
+                relative_gap = 0
+            elif denom != 0:
+                relative_gap = 100.0 * absolute_gap / denom
+            else:
+                relative_gap = float('inf')
             message = (
                     f"node {output['number_of_nodes']}"
                     + f" discrepancy {node.discrepancy}")
@@ -417,7 +429,13 @@ def limited_discrepancy_search(parameters, **kwargs):
             absolute_gap = primal - dual
         else:
             absolute_gap = dual - primal
-        relative_gap = 100.0 * absolute_gap / max(abs(primal), abs(dual))
+        denom = max(abs(primal), abs(dual))
+        if absolute_gap == 0:
+            relative_gap = 0
+        elif denom != 0:
+            relative_gap = 100.0 * absolute_gap / denom
+        else:
+            relative_gap = float('inf')
         total_number_of_columns = len(parameters.columns)
         o = branching_scheme.output
         print()
