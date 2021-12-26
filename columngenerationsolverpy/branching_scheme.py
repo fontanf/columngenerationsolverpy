@@ -46,6 +46,8 @@ class BranchingScheme:
                 "verbose", True)
         self.maximum_discrepancy = kwargs.get(
                 "maximum_discrepancy", float('inf'))
+        self.debug = kwargs.get(
+                "debug", False)
 
         self.output = {
                 "time_lp_solve": 0.0,
@@ -99,7 +101,8 @@ class BranchingScheme:
                     self.parameters,
                     fixed_columns=fixed_columns,
                     maximum_number_of_iterations=maximum_number_of_iterations,
-                    verbose=False)
+                    verbose=self.debug,
+                    debug=self.debug)
             # print(output_cg)
             self.output["time_lp_solve"] += output_cg["time_lp_solve"]
             self.output["time_pricing"] += output_cg["time_pricing"]
