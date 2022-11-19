@@ -179,12 +179,16 @@ class PricingSolver:
 
 
 def get_parameters(instance):
-    n = len(instance.item_types)
-    p = columngenerationsolverpy.Parameters(n)
+    # Create object to return. Parameter: number of constraints in the
+    # exponential formulation.
+    p = columngenerationsolverpy.Parameters(len(instance.item_types))
+    # Compute the maximum demands. It is used as column upper bound and to
+    # define the cost of the dummy columns.
     maximum_demand = max(item_type.demand
                          for item_type in instance.item_types)
-
+    # Objective sense.
     p.objective_sense = "min"
+    # Column bounds.
     p.column_lower_bound = 0
     p.column_upper_bound = maximum_demand
     # Row bounds.
