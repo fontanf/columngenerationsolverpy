@@ -67,7 +67,7 @@ def column_generation(parameters, **optional_parameters):
         column = parameters.columns[column_id]
         for index, coef in zip(column.row_indices, column.row_coefficients):
             row_values[index] += value * coef
-        c0 += column.objective_coefficient
+        c0 += value * column.objective_coefficient
 
     # Compute fixed rows.
     new_row_indices = [-2] * m
