@@ -1,4 +1,4 @@
-# Column Generation Solver (Python)
+# Column generation solver (Python)
 
 A solver based on column generation.
 
@@ -13,13 +13,13 @@ This is the Python3 version of the C++ package [fontanf/columngenerationsolver](
 The goal of this repository is to provide a simple framework to quickly implement heuristic algorithms based on column generation.
 
 Algorithms:
-* Column Generation `column_generation`
+* Column generation `column_generation`
 * Greedy `greedy`
-* Limited Discrepancy Search `limited_discrepancy_search`
+* Limited discrepancy search `limited_discrepancy_search`
 
 ## Examples
 
-[Cutting Stock Problem](examples/cuttingstock.py)
+[Cutting stock problem](examples/cuttingstock.py)
 
 ## Usage, running examples from command line
 
