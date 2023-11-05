@@ -262,7 +262,7 @@ def greedy(parameters, **kwargs):
     # Initial display.
     if verbose:
         print("======================================")
-        print("       Column Generation Solver       ")
+        print("        ColumnGenerationSolver        ")
         print("======================================")
         print()
         print("Algorithm")
@@ -345,12 +345,12 @@ def limited_discrepancy_search(parameters, **kwargs):
     # Initial display.
     if verbose:
         print("======================================")
-        print("       Column Generation Solver       ")
+        print("        ColumnGenerationSolver        ")
         print("======================================")
         print()
         print("Algorithm")
         print("---------")
-        print("Limited Discrepancy Search")
+        print("Limited discrepancy search")
         print()
         print("Parameters")
         print("----------")

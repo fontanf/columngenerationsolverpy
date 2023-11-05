@@ -1,4 +1,4 @@
-# Column generation solver (Python)
+# ColumnGenerationSolver (Python)
 
 A solver based on column generation.
 

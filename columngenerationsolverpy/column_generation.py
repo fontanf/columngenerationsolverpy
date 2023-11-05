@@ -22,12 +22,12 @@ def column_generation(parameters, **optional_parameters):
 
     if verbose:
         print("======================================")
-        print("       Column Generation Solver       ")
+        print("        ColumnGenerationSolver        ")
         print("======================================")
         print()
         print("Algorithm")
         print("---------")
-        print("Column Generation")
+        print("Column generation")
         print()
         print("Parameters")
         print("----------")
